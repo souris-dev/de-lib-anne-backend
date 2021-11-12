@@ -1,0 +1,15 @@
+{
+  "name": "de-lib-anne-backend",
+  "version": "1.0.0",
+  "description": "Backend for De Lib Anne",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "express",
+    "microservices"
+  ],
+  "author": "",
+  "license": "MIT"
+}
