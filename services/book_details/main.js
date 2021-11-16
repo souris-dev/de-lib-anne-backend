@@ -1,0 +1,60 @@
+const express = require("express");
+const { MongoClient } = require("mongodb");
+const app = express();
+const cors = require("cors");
+
+app.use(express.json());
+app.use(cors());
+
+const dotenv = require("dotenv");
+dotenv.config();
+
+const port = process.env.PORT || 5000;
+const hostIp = process.env.HOSTBINDIP || "localhost";
+const mongo_uri = process.env.MONGO_URI;
+
+const client = new MongoClient(mongo_uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+client.connect((error) => {
+  if (error) {
+    console.log(error);
+    process.exit(-1);
+  }
+
+  startListening();
+});
+
+// Book details + reviews endpoint
+app.get("/bookdets-reviews", async (req, res) => {
+  res.set("Content-Type", "application/json");
+
+  const reviewCollection = client.db("delibanne").collection("reviews");
+  const bookCollection = client.db("delibanne").collection("books");
+
+  var bookISBN = req.body.isbn13;
+
+  var result = await bookCollection.findOne({ isbn13: bookISBN });
+  if (result == null) {
+    //no book with the specified ISBN
+    res.status(404).send(JSON.stringify({ message: "Book not found" }));
+    return;
+  }
+
+  var resRev = await reviewCollection.find({ bookID: result._id }).toArray();
+
+  if (resRev == null) {
+    res.status(404).send(JSON.stringify({ message: "Reviews not found" }));
+    return;
+  }
+  var finalDetails = { bookDet: result, reviews: resRev };
+  res.status(200).send(JSON.stringify(finalDetails));
+});
+
+function startListening() {
+  app.listen(port, () => {
+    console.log(`Example app listening at http://${hostIp}:${port}`);
+  });
+}
