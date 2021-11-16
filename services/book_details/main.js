@@ -34,7 +34,7 @@ app.get("/bookdets-reviews", async (req, res) => {
   const reviewCollection = client.db("delibanne").collection("reviews");
   const bookCollection = client.db("delibanne").collection("books");
 
-  var bookISBN = req.body.isbn13;
+  var bookISBN = req.query.isbn13;
 
   var result = await bookCollection.findOne({ isbn13: bookISBN });
   if (result == null) {
@@ -45,11 +45,7 @@ app.get("/bookdets-reviews", async (req, res) => {
 
   var resRev = await reviewCollection.find({ bookID: result._id }).toArray();
 
-  if (resRev == null) {
-    res.status(404).send(JSON.stringify({ message: "Reviews not found" }));
-    return;
-  }
-  var finalDetails = { bookDet: result, reviews: resRev };
+  var finalDetails = { bookDet: result, reviews: resRev == null ? [] : resRev };
   res.status(200).send(JSON.stringify(finalDetails));
 });
 
