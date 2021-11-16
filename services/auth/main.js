@@ -68,7 +68,6 @@ app.post('/createuser', async (req, res) => {
   var result = await userCollection.findOne({ email: email });
 
   if (result != null) {
-    // no user with that email
     res.status(400).send(JSON.stringify({ message: "User with same email already exists" }));
     return;
   }
