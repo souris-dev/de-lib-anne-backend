@@ -61,7 +61,7 @@ app.get("/bookdets-reviews", async (req, res) => {
     .toArray();
 
   var finalDetails = {
-    bookDet: { ...result, nstars: average },
+    bookDet: { ...result, nstars: average[0].avgStars },
     reviews: resRev == null ? [] : resRev,
   };
   res.status(200).send(JSON.stringify(finalDetails));
