@@ -45,7 +45,25 @@ app.get("/bookdets-reviews", async (req, res) => {
 
   var resRev = await reviewCollection.find({ bookID: result._id }).toArray();
 
-  var finalDetails = { bookDet: result, reviews: resRev == null ? [] : resRev };
+  // calculating nstars
+  const average = await reviewCollection
+    .aggregate([
+      {
+        $group: {
+          _id: "$bookID",
+          avgStars: { $avg: "$nstars" },
+        },
+      },
+      {
+        $match: { _id: result._id },
+      },
+    ])
+    .toArray();
+
+  var finalDetails = {
+    bookDet: { ...result, nstars: average },
+    reviews: resRev == null ? [] : resRev,
+  };
   res.status(200).send(JSON.stringify(finalDetails));
 });
 
