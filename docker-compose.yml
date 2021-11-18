@@ -1,0 +1,44 @@
+version: "3.9"
+
+networks:
+  dla-backend:
+    driver: bridge
+
+services:
+  auth:
+    build: ./services/auth
+    container_name: dla_auth_service
+    networks:
+      - dla-backend
+    restart: on-failure
+
+  book_details:
+    build: ./services/book_details
+    container_name: dla_bookdetails
+    networks:
+      - dla-backend
+    restart: on-failure
+
+  kong-gateway:
+    image: kong:2.6.0-alpine
+    container_name: kong_gateway
+    networks:
+      - dla-backend
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: "/etc/kong/kong.yml"
+    ports:
+      - "0.0.0.0:8000:8000/tcp"
+      - "0.0.0.0:8010:8443/tcp"
+      - "127.0.0.1:8001:8001/tcp"
+      - "127.0.0.1:8011:8444/tcp"
+      - "127.0.0.1:8002:8002/tcp"
+      - "127.0.0.1:8012:8445/tcp"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure:5
+    volumes:
+      - ./gateway:/etc/kong:ro
