@@ -3,13 +3,13 @@ _transform: true
 
 services:
 - name: auth-service
-  url: http://localhost:5000
+  url: http://dla_auth_service:5000
   routes:
   - name: auth-route
     paths:
     - /auth
 - name: bookdet-reviews-service
-  url: http://localhost:5001
+  url: http://dla_bookdetails:5001
   routes:
   - name: bookdet-reviews-get
     paths:
