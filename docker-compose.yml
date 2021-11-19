@@ -7,7 +7,7 @@ networks:
 services:
   auth:
     build: ./services/auth
-    container_name: dla_auth_service
+    container_name: dla_auth
     networks:
       - dla-backend
     restart: on-failure

@@ -2,15 +2,15 @@ _format_version: "2.1"
 _transform: true
 
 services:
-- name: auth-service
-  url: http://dla_auth_service:5000
+- name: auth_service
+  url: http://dla_auth:5000
   routes:
-  - name: auth-route
+  - name: auth_route
     paths:
     - /auth
-- name: bookdet-reviews-service
+- name: book_details_service
   url: http://dla_book_details:5001
   routes:
-  - name: bookdet-reviews
+  - name: book_details_route
     paths:
      - /book_details
