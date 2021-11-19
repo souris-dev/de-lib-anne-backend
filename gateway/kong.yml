@@ -9,8 +9,8 @@ services:
     paths:
     - /auth
 - name: bookdet-reviews-service
-  url: http://dla_bookdetails:5001
+  url: http://dla_book_details:5001
   routes:
-  - name: bookdet-reviews-get
+  - name: bookdet-reviews
     paths:
-     - /bookdetails
+     - /book_details

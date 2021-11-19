@@ -14,14 +14,14 @@ services:
 
   book_details:
     build: ./services/book_details
-    container_name: dla_bookdetails
+    container_name: dla_book_details
     networks:
       - dla-backend
     restart: on-failure
 
   kong-gateway:
     image: kong:2.6.0-alpine
-    container_name: kong_gateway
+    container_name: dla_gateway
     networks:
       - dla-backend
     environment:
