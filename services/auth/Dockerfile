@@ -1,5 +1,5 @@
 FROM node:14-alpine
-WORKDIR /usr/src/services/book_details
+WORKDIR /usr/src/services/auth
 COPY package.json package-lock.json ./
 RUN npm install --production
 COPY . .
