@@ -1,19 +1,31 @@
 const express = require("express");
 const { MongoClient } = require("mongodb");
 const bcrypt = require("bcryptjs");
-const app = express();
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const { makeJwt } = require("./utils/jwt_utils");
 
+const app = express();
 // "Middleware": Web (request) -> (middleware) -> handler
-app.use(express.json());
 app.use(cors()); // enable access from any origin
+app.use(express.json());
+app.use(cookieParser());
 
 const dotenv = require("dotenv");
 dotenv.config();
 
+// load the required variables from the .env
 const port = process.env.PORT || 5000;
 const hostIp = process.env.HOSTBINDIP || "localhost";
 const mongo_uri = process.env.MONGO_URI;
+
+if (mongo_uri == undefined || mongo_uri == null) {
+  console.error("MONGO_URI needs to be defined!");
+}
+
+if (process.env.JWT_TOKEN_SECRET == undefined || process.env.JWT_TOKEN_SECRET == null) {
+  console.error("The JWT_TOKEN_SECRET variable needs to be defined!");
+}
 
 const client = new MongoClient(mongo_uri, {
   useNewUrlParser: true,
@@ -50,10 +62,14 @@ app.post("/auth", async (req, res) => {
   var isPassMatching = await bcrypt.compare(plainTextPassword, result.password);
 
   if (isPassMatching) {
-    // wrong password
-    res.status(200).send(JSON.stringify({ message: "Auth OK" }));
-  } else {
     // right email for the right password
+
+    // send a cookie with a jwt that expires in the set time (as specified in the line below)
+    const expiry = { duration: '3h', time: new Date(Date.now() + 3 * 60 * 60 * 1000) }
+    res.cookie('jwt', makeJwt({ _id: result._id, email: userEmail }, expiry.duration), { expires: expiry.time, httpOnly: true })
+    res.status(200).send(JSON.stringify({ message: "Auth OK", username: result.username }));
+  } else {
+    // wrong password
     res.status(400).send(JSON.stringify({ message: "Wrong password" }));
   }
 });
@@ -86,11 +102,22 @@ app.post("/createuser", async (req, res) => {
       interests: interests,
     });
 
-    res.status(200).send(JSON.stringify({ message: "User created" }));
+    // send a cookie with a jwt that expires in the set time (as specified in the line below)
+    const expiry = { duration: '3h', time: new Date(Date.now() + 3 * 60 * 60 * 1000) }
+    res.cookie('jwt', makeJwt({ _id: result._id, email: userEmail }, expiry.duration), { expires: expiry.time, httpOnly: true })
+    res.status(200).send(JSON.stringify({ message: "User created", username: username }));
   } catch (error) {
     res.status(500).send(JSON.stringify({ message: error.toString() }));
   }
 });
+
+// logout endpoint
+app.post("/logout", (req, res) => {
+  // to delete a cookie, just set its expiry time to the past
+  res.cookie('jwt', '', { expires: new Date(Date.now() - 10000) });
+  res.header('Content-Type', "application/json");
+  res.status(200).send(JSON.stringify({ message: "Logged out" }));
+})
 
 function startListening() {
   app.listen(port, () => {
