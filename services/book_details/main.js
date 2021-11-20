@@ -67,6 +67,11 @@ app.get("/bookdets-reviews", async (req, res) => {
   res.status(200).send(JSON.stringify(finalDetails));
 });
 
+// Post book review
+app.post("/createreview", (req, res) => {
+
+});
+
 function startListening() {
   app.listen(port, () => {
     console.log(`Example app listening at http://${hostIp}:${port}`);
