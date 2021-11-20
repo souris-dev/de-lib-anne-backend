@@ -74,6 +74,6 @@ app.post("/createreview", (req, res) => {
 
 function startListening() {
   app.listen(port, () => {
-    console.log(`Example app listening at http://${hostIp}:${port}`);
+    console.log(`book_details service running at http://${hostIp}:${port}`);
   });
 }

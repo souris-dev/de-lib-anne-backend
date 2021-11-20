@@ -121,6 +121,6 @@ app.post("/logout", (req, res) => {
 
 function startListening() {
   app.listen(port, () => {
-    console.log(`Example app listening at http://${hostIp}:${port}`);
+    console.log(`auth service listening at http://${hostIp}:${port}`);
   });
 }
