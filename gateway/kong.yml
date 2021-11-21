@@ -14,3 +14,9 @@ services:
   - name: book_details_route
     paths:
      - /book_details
+- name: search_service
+  url: http://dla_search:5004
+  routes:
+  - name: search_route
+    paths:
+      - /search

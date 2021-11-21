@@ -19,6 +19,13 @@ services:
       - dla-backend
     restart: on-failure
 
+  search:
+    build: ./services/search
+    container_name: dla_search
+    networks:
+      - dla-backend
+    restart: on-failure
+
   kong-gateway:
     image: kong:2.6.0-alpine
     container_name: dla_gateway
