@@ -13,6 +13,11 @@ const port = process.env.PORT || 5004;
 const hostIp = process.env.HOSTBINDIP || "localhost";
 const mongo_uri = process.env.MONGO_URI;
 
+if (mongo_uri == undefined || mongo_uri == null) {
+  console.error("MONGO_URI needs to be defined!");
+  process.exit(-1);
+}
+
 const client = new MongoClient(mongo_uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,

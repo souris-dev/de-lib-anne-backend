@@ -8,6 +8,7 @@ services:
   - name: auth_route
     paths:
     - /auth
+
 - name: book_details_service
   url: http://dla_book_details:5001
   routes:
@@ -20,3 +21,9 @@ services:
   - name: search_route
     paths:
       - /search
+- name: wishlist_service
+  url: http://dla_wishlist:5005
+  routes:
+  - name: wishlist_route
+    paths:
+     - /wishlist

@@ -10,6 +10,8 @@ services:
     container_name: dla_auth
     networks:
       - dla-backend
+    ports:
+      - "5000:5000"
     restart: on-failure
 
   book_details:
@@ -26,6 +28,15 @@ services:
       - dla-backend
     restart: on-failure
 
+  wishlist:
+    build: ./services/wishlist
+    container_name: dla_wishlist
+    networks:
+      - dla-backend
+    ports:
+      - "5005:5005"
+    restart: on-failure
+
   kong-gateway:
     image: kong:2.6.0-alpine
     container_name: dla_gateway
@@ -34,6 +45,8 @@ services:
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: "/etc/kong/kong.yml"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8443 ssl"
+      KONG_ADMIN_GUI_URL: "http://0.0.0.0:8002"
     ports:
       - "0.0.0.0:8000:8000/tcp"
       - "0.0.0.0:8010:8443/tcp"

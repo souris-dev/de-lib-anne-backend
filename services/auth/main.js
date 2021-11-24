@@ -21,10 +21,12 @@ const mongo_uri = process.env.MONGO_URI;
 
 if (mongo_uri == undefined || mongo_uri == null) {
   console.error("MONGO_URI needs to be defined!");
+  process.exit(-1);
 }
 
 if (process.env.JWT_TOKEN_SECRET == undefined || process.env.JWT_TOKEN_SECRET == null) {
   console.error("The JWT_TOKEN_SECRET variable needs to be defined!");
+  process.exit(-1);
 }
 
 const client = new MongoClient(mongo_uri, {
