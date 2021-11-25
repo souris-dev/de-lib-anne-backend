@@ -1,0 +1,41 @@
+version: "3.9"
+
+networks:
+  dla-backend:
+    driver: bridge
+
+services:
+  auth:
+    build: ./services/auth
+    container_name: dla_auth
+    networks:
+      - dla-backend
+    ports:
+      - "5000:5000"
+    restart: on-failure
+
+  book_details:
+    build: ./services/book_details
+    container_name: dla_book_details
+    networks:
+      - dla-backend
+    restart: on-failure
+
+  search:
+    build: ./services/search
+    container_name: dla_search
+    networks:
+      - dla-backend
+    restart: on-failure
+
+  wishlist:
+    build: ./services/wishlist
+    container_name: dla_wishlist
+    networks:
+      - dla-backend
+    ports:
+      - "5005:5005"
+    restart: on-failure
+
+  # the kong gateway services are defined in
+  # docker-compose-kong.yml
