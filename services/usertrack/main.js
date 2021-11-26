@@ -37,69 +37,31 @@ client.connect((error) => {
   startListening();
 });
 
-/**
- * Possible optimization:
- * Previous reviews:
- * (a1 + a2 + a3 + ...) / n = alpha
- *
- * New review x added:
- * (a1 + a2 + a3 + ... + x) / (n + 1) = alpha + beta
- *
- * n/(n + 1) alpha + x/(n + 1) = alpha + beta
- * beta = n/(n + 1) alpha + x/(n + 1) - alpha
- * beta = x/(n + 1) - (1 - n/(n + 1)) alpha
- * beta = (x - alpha) / (n + 1)
- *
- * Where,
- * previous avg_nstars = alpha
- * previous nreviews = n 
- * new avg_nstars = alpha + beta
- */
+app.post("/onbookdetailsopen", verifyJwt, (req, res) => {
+  res.header("Content-Type", "application/json");
 
-// Book details + reviews endpoint
-app.get("/bookdets-reviews", async (req, res) => {
-  res.set("Content-Type", "application/json");
-
-  const reviewCollection = client.db("delibanne").collection("reviews");
-  const bookCollection = client.db("delibanne").collection("books");
-
-  var bookISBN = req.query.isbn13;
-
-  var result = await bookCollection.findOne({ isbn13: bookISBN });
-  if (result == null) {
-    //no book with the specified ISBN
-    res.status(404).send(JSON.stringify({ message: "Book not found" }));
+  if (!res.hasJwt) {
+    // no tracking if there's no jwt
+    res.status(200).send(JSON.stringify({ message: "No jwt, no tracking." }));
     return;
   }
 
-  var resRev = await reviewCollection.find({ bookID: result._id }).toArray();
+  const openedIsbn13 = req.body.isbn13;
+  const bookCollection = client.db('delibanne').collection('books');
 
-  // calculating nstars
-  const average = await reviewCollection
-    .aggregate([
-      {
-        $group: {
-          _id: "$bookID",
-          avgStars: { $avg: "$nstars" },
-        },
-      },
-      {
-        $match: { _id: result._id },
-      },
-    ])
-    .toArray();
-
-  var finalDetails = {
-    bookDet: { ...result, nstars: average[0].avgStars },
-    reviews: resRev == null ? [] : resRev,
-  };
-  res.status(200).send(JSON.stringify(finalDetails));
+  // fetch the book and its tags, authors
+  const book = await bookCollection.findOne({ isbn13:  })
 });
 
-// Post book review
-app.post("/createreview", (req, res) => {
+app.post("/onbooksearch", verifyJwt, (req, res) => {
+  res.header("Content-Type", "application/json");
 
-});
+  if (!res.hasJwt) {
+    // no tracking if there's no jwt
+    res.status(200).send(JSON.stringify({ message: "No jwt, no tracking." }));
+    return;
+  }
+})
 
 function startListening() {
   app.listen(port, () => {
