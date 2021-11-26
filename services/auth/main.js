@@ -121,6 +121,10 @@ app.post("/logout", (req, res) => {
   res.status(200).send(JSON.stringify({ message: "Logged out" }));
 })
 
+app.post('/sendotp', (req, res) => {
+  
+});
+
 function startListening() {
   app.listen(port, () => {
     console.log(`auth service listening at http://${hostIp}:${port}`);
