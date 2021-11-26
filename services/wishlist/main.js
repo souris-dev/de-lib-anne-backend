@@ -214,6 +214,40 @@ app.delete("/deletewishitem", verifyJwt, async (req, res) => {
   res.status(404).send(JSON.stringify({ message: "No updation was done. All OK." }));
 })
 
+// GET returns if the wishlist of a user has a book (given its isbn13)
+// as usual, the user is identified using a JWT
+app.get("/haswishitem", verifyJwt, async (req, res) => {
+  res.header("Content-Type", "application/json");
+
+  const toCheckBookIsbn13 = req.query.isbn13;
+  const userId = req.decodedJwt._id;
+
+  const wishlistCollection = client.db('delibanne').collection('wishlist');
+  const bookCollection = client.db('delibanne').collection('books');
+
+  // first get the book's object id using the isbn13
+  const theBook = await bookCollection.findOne({ isbn13: toCheckBookIsbn13 });
+
+  if (theBook == null) {
+    // a book with that isbn13 does not exist
+    res.status(404).send(JSON.stringify({ message: "No book with that ISBN13 in the database." }));
+    return;
+  }
+
+  // in the below query, userId: ObjectId(userId), wishlist: theBook._id implies
+  // find the record with the userId as given and with the wishlist array inside the record
+  // containing the required book's objectId
+  const wishRes = await wishlistCollection.findOne({ userID: ObjectId(userId), wishlist: theBook._id });
+
+  if (wishRes == null) {
+    // either the wishlist doesn't exist, or the book isn't in it
+    res.status(404).send(JSON.stringify({ message: "Book not in wishlist." }));
+  }
+  else {
+    res.status(200).send(JSON.stringify({ message: "Book present in wishlist." }));
+  }
+})
+
 function startListening() {
   app.listen(port, () => {
     console.log(`wishlist service running at http://${hostIp}:${port}`);
