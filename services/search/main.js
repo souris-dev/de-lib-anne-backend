@@ -41,6 +41,8 @@ app.get('/search', verifyJwt, async (req, res) => {
   res.header('Content-Type', 'application/json');
 
   var query = req.query.q;
+  var limit = req.query.limit || 12; // if no limit specified, take 12
+
   const bookCollection = client.db('delibanne').collection('books');
 
   if (query == undefined) {
@@ -63,7 +65,7 @@ app.get('/search', verifyJwt, async (req, res) => {
       }
     },
     {
-      $limit: 12
+      $limit: limit
     },
     {
       $lookup: {
