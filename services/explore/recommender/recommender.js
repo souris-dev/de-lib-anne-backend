@@ -11,15 +11,52 @@ const SEARCH_SERVICE_URL = process.env.SEARCH_SERVICE_URL || "http://dla_search:
 
 // Generates recommendations for general person
 async function getExplore() {
-  return { interestTags: [], recommendations: [] };
+  const booksCollection = dbclient.collection('books');
+
+  // how many recommendations do we want?
+  const NFRAC = 0.5; // fraction of total books to randomly take
+  const NRANDOM_BOOKS_LIMIT = 10; // max. number of random books to take
+
+  // for how $rand works in selecting random books below, see this:
+  // https://docs.mongodb.com/manual/reference/operator/aggregation/rand/#mongodb-expression-exp.-rand
+  const randomBooks = await booksCollection.aggregate(
+    [
+      {
+        $match: { $expr: { $lt: [NFRAC, { $rand: {} }] } }
+      },
+      {
+        $limit: NRANDOM_BOOKS_LIMIT
+      },
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "bookID",
+          as: "reviews"
+        }
+      },
+      {
+        $project: {
+          title: 1,
+          author: 1,
+          isbn13: 1,
+          olid: 1,
+          nstars: { $ifNull: [{ $avg: "$reviews.nstars" }, 0] }
+        }
+      }
+    ]
+  ).toArray();
+
+  return { interestTags: ["Fiction", "Comedy"], recommendations: randomBooks };
 }
 
 
-// Generates recommendations for a signed in user
-// userId: object Id of the user in the db
-// retrieved from the jwt
-// Returns 2 things: the recommendations
-// and also the tags that the user likes (based on book visits)
+/**
+ * Generates recommendations for a signed in user
+ * @param userId: object Id of the user in the db retrieved from the jwt
+ * @returns {{ interestTags: string[], recommendations: any[] }: 
+ *            object containing most common interest tags and recommendations}
+ */
 async function getExploreWithRecommendations(userId, client) {
   const bookvisitCollection = dbclient.collection('useractivitybooks');
   const searchCollection = dbclient.collection('useractivitysearches');
@@ -79,6 +116,10 @@ async function getExploreWithRecommendations(userId, client) {
   return { interestTags: allResults[0], recommendations: allResults[1] };
 }
 
+
+/**
+ * Utility functions
+**/
 async function getMostFrequentTags(tagsArray) {
   // TODO: We may want to use a better method for
   // finding the most occuring elements in the interestTags
@@ -126,8 +167,6 @@ async function getRandomSearches(keywords, ntimes) {
   const MIN_SEARCH_RES_LIMIT = 3;
   const MAX_SEARCH_RES_LIMIT = 6;
 
-  const searchUrl = SEARCH_SERVICE_URL + "/search"
-
   for (let i = 0; i < ntimes; i++) {
     // sample some random kewywords
     // the second arg specifies how many keywords to sample,
@@ -138,11 +177,10 @@ async function getRandomSearches(keywords, ntimes) {
     const randKeywords = sampleSize(keywords, random(MIN_KEYWORDS, MAX_KEYWORDS));
 
     // create the search URL in the form /search?q=kw1+kw2+...
-    var searchUrlString = searchUrl + "?";
     const params = new URLSearchParams();
     params.set("q", randKeywords.join(" "));
     params.set("limit", random(MIN_SEARCH_RES_LIMIT, MAX_SEARCH_RES_LIMIT))
-    searchUrlString = searchUrlString.concat(params.toString());
+    const searchUrlString = SEARCH_SERVICE_URL + "/search?" + params.toString();
 
     // the searchUrlString is in now of the form http://dla_search:5004/search?q=kw1+kw2+...
     // now use the search service to get relevant books and put them into the results array
@@ -157,4 +195,4 @@ async function getRandomSearches(keywords, ntimes) {
   return uniqBy(results, 'isbn13');
 }
 
-module.exports = { getExplore, getExploreWithRecommendations };
+module.exports = { SEARCH_SERVICE_URL, getExplore, getExploreWithRecommendations };

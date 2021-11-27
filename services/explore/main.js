@@ -8,7 +8,7 @@ app.use(cors());
 
 const dotenv = require("dotenv");
 const { verifyJwt } = require("../usertrack/utils/jwt_utils");
-const { getExplore, getExploreWithRecommendations } = require("./recommender/recommender");
+const { getExplore, getExploreWithRecommendations, SEARCH_SERVICE_URL } = require("./recommender/recommender");
 dotenv.config();
 
 const port = process.env.PORT || 5007;
@@ -37,6 +37,23 @@ app.get("/recommendations", verifyJwt, async (req, res) => {
   res.status(200).send(JSON.stringify(recommendations));
 })
 
+/**
+ * For now, just redirects to the search service's /search GET endpoint
+ * with the same query, and limit set to 6.
+ */
+app.get("/recommendations/bykeyword", verifyJwt, async (req, res) => {
+  res.header("Content-Type", "application/json");
+  const queryKeyword = req.query.keyword;
+  console.log(queryKeyword); //debug
+
+  // Create the url in the form /search?q=blah+blah
+  const params = new URLSearchParams()
+  params.set("q", queryKeyword);
+  params.set("limit", 6);
+  const searchQueryString = SEARCH_SERVICE_URL + "/search?" + params.toString();
+
+  res.redirect(searchQueryString);
+})
 
 function startListening() {
   app.listen(port, () => {

@@ -42,5 +42,12 @@ services:
       - dla-backend
     restart: on-failure
 
+  explore:
+    build: ./services/explore
+    container_name: dla_explore
+    networks:
+      - dla-backend
+    restart: on-failure
+
   # the kong gateway services are defined in
   # docker-compose-kong.yml
