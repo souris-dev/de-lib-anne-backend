@@ -33,8 +33,13 @@ services:
     container_name: dla_wishlist
     networks:
       - dla-backend
-    ports:
-      - "5005:5005"
+    restart: on-failure
+
+  usertrack:
+    build: ./services/usertrack
+    container_name: dla_usertrack
+    networks:
+      - dla-backend
     restart: on-failure
 
   # the kong gateway services are defined in

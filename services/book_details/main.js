@@ -2,11 +2,15 @@ const express = require("express");
 const { MongoClient } = require("mongodb");
 const app = express();
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+app.use(cookieParser());
 
 const dotenv = require("dotenv");
+const { verifyJwt } = require("./utils/jwt_utils");
+const { notifyTrackerBookVisit } = require("./utils/tracker");
 dotenv.config();
 
 const port = process.env.PORT || 5000;
@@ -57,7 +61,7 @@ client.connect((error) => {
  */
 
 // Book details + reviews endpoint
-app.get("/bookdets-reviews", async (req, res) => {
+app.get("/bookdets-reviews", verifyJwt, async (req, res) => {
   res.set("Content-Type", "application/json");
 
   const reviewCollection = client.db("delibanne").collection("reviews");
@@ -90,10 +94,16 @@ app.get("/bookdets-reviews", async (req, res) => {
     .toArray();
 
   var finalDetails = {
-    bookDet: { ...result, nstars: average[0].avgStars },
+    bookDet: { ...result, nstars: average == null || average.length == 0 ? 0 : average[0].avgStars },
     reviews: resRev == null ? [] : resRev,
   };
   res.status(200).send(JSON.stringify(finalDetails));
+
+  // notify the tracker about the visit if the request had a jwt
+  // that is, if the user was signed in
+  if (req.hasJwt) {
+    notifyTrackerBookVisit(bookISBN, req.cookies.jwt);
+  }
 });
 
 // Post book review

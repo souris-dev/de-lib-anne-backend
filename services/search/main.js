@@ -1,12 +1,16 @@
 const express = require("express");
 const { MongoClient } = require("mongodb");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+app.use(cookieParser());
 
 const dotenv = require("dotenv");
+const { verifyJwt } = require("./utils/jwt_utils");
+const { notifyTrackerBookSearch } = require("./utils/tracker");
 dotenv.config();
 
 const port = process.env.PORT || 5004;
@@ -33,7 +37,7 @@ client.connect((error) => {
 });
 
 // Search endpoint
-app.get('/search', async (req, res) => {
+app.get('/search', verifyJwt, async (req, res) => {
   res.header('Content-Type', 'application/json');
 
   var query = req.query.q;
@@ -83,6 +87,12 @@ app.get('/search', async (req, res) => {
   const result = await bookCollection.aggregate(aggQuery).toArray();
 
   res.status(200).send(JSON.stringify(result));
+
+  // if the user is signed in, (i.e., req has a jwt)
+  // notify the tracker of this search
+  if (req.hasJwt) {
+    notifyTrackerBookSearch(query, req.cookies.jwt);
+  }
 })
 
 function startListening() {
