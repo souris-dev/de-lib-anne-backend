@@ -8,8 +8,13 @@ const dotenv = require("dotenv");
 const { verifyJwt } = require("./utils/jwt_utils");
 const db = require("./db");
 
+var corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cors());
 app.use(cookieParser());
 
 dotenv.config();

@@ -7,19 +7,27 @@ const { makeJwt } = require("./utils/jwt_utils");
 const nodemailer = require("nodemailer");
 
 const app = express();
-// "Middleware": Web (request) -> (middleware) -> handler
-var corsOptions = {
-  origin: "http://localhost:3000",
-  credentials: true,
-};
-app.use(cors(corsOptions)); // enable access from any origin
-app.use(express.json());
-app.use(cookieParser());
 
 const dotenv = require("dotenv");
 dotenv.config();
 
+// "Middleware": Web (request) -> (middleware) -> handler
+var corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(cookieParser());
+
 // initializing a transporter object to send emails
+
+if (process.env.EMAIL_ID == null || process.GMAIL_PASSWORD == null) {
+  console.error("Auth service needs the variables EMAIL_ID and GMAIL_PASSWORD to be defined in the environment.");
+  process.exit(-1);
+}
+
 let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -28,6 +36,9 @@ let transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * Generates a 6 digit random number.
+ */
 function getRandomNumber() {
   min = 100000;
   max = 999999;
