@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const fetch = require("node-fetch");
 
 const dotenv = require("dotenv");
 const { verifyJwt } = require("./utils/jwt_utils");
