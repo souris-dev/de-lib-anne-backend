@@ -148,6 +148,9 @@ app.post("/createreview", verifyJwt, async (req, res) => {
   res.status(200).json({ message: "Review inserted: Success" });
 });
 
+// Adding book to the books collection in database
+app.post("/addbook", async (req, res) => {});
+
 function startListening() {
   app.listen(port, () => {
     console.log(`book_details service running at http://${hostIp}:${port}`);

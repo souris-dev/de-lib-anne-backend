@@ -8,7 +8,11 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 // "Middleware": Web (request) -> (middleware) -> handler
-app.use(cors()); // enable access from any origin
+var corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true,
+};
+app.use(cors(corsOptions)); // enable access from any origin
 app.use(express.json());
 app.use(cookieParser());
 
