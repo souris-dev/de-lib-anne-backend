@@ -1,7 +1,6 @@
 const db = require("../db");
 
-const { random, uniqBy, toPairs } = require("lodash");
-const { frequencies } = require("lodash-contrib");
+const { random, sampleSize, uniqBy, toPairs } = require("lodash");
 const fetch = require("node-fetch");
 
 const { ObjectId } = require("mongodb");
@@ -14,7 +13,7 @@ async function getExplore() {
   const booksCollection = dbclient.collection('books');
 
   // how many recommendations do we want?
-  const NFRAC = 0.5; // fraction of total books to randomly take
+  const NFRAC = 0.7; // fraction of total books to randomly take
   const NRANDOM_BOOKS_LIMIT = 10; // max. number of random books to take
 
   // for how $rand works in selecting random books below, see this:
@@ -47,7 +46,7 @@ async function getExplore() {
     ]
   ).toArray();
 
-  return { interestTags: ["Fiction", "Comedy"], recommendations: randomBooks };
+  return { interestTags: ["Fiction", "Comedy", "Mystery"], recommendations: randomBooks };
 }
 
 
@@ -57,7 +56,7 @@ async function getExplore() {
  * @returns {{ interestTags: string[], recommendations: any[] }: 
  *            object containing most common interest tags and recommendations}
  */
-async function getExploreWithRecommendations(userId, client) {
+async function getExploreWithRecommendations(userId) {
   const bookvisitCollection = dbclient.collection('useractivitybooks');
   const searchCollection = dbclient.collection('useractivitysearches');
 
@@ -94,9 +93,12 @@ async function getExploreWithRecommendations(userId, client) {
   }
 
   if (bookVisits) {
-    bookVisits.forEach((bookVisit) => {
+    await bookVisits.forEach((bookVisit) => {
+      console.log("Tags for " + bookVisit.author)
+      console.log(bookVisit.tags);
       interestKeywords.push(...bookVisit.tags);
-      interestTags.push()
+      interestTags.push(...bookVisit.tags);
+      console.log(interestKeywords);
 
       // by a given probability, include the author
       if (Math.random() > authorProb) {
@@ -105,14 +107,25 @@ async function getExploreWithRecommendations(userId, client) {
     })
   }
 
+  console.log("After processing book visits, interestKeywords: ");
+  console.log(interestKeywords);
+
   if (searches) {
-    searches.forEach((search) => {
+    await searches.forEach((search) => {
       interestKeywords.push(search.searchTerm);
     })
   }
 
+  console.log("After processing searches, interestKeywords: ");
+  console.log(interestKeywords);
+
   // get the most frequently visited tags and the recommendations
-  const allResults = await Promise.all([getMostFrequentTags(interestKeywords), getRandomSearches(niter)]);
+  const allResults = await Promise.all(
+    [getMostFrequentTags(interestKeywords), getRandomSearches(interestKeywords, niter)]
+  );
+
+  console.log("Most freq tags: ");
+  console.log(allResults[0]);
   return { interestTags: allResults[0], recommendations: allResults[1] };
 }
 
@@ -167,7 +180,12 @@ async function getRandomSearches(keywords, ntimes) {
   const MIN_SEARCH_RES_LIMIT = 3;
   const MAX_SEARCH_RES_LIMIT = 6;
 
+  const allFetchPromises = [];
+
+  console.log("---- Starting for loop for fetches");
   for (let i = 0; i < ntimes; i++) {
+    console.log("--------------i is")
+    console.log(i);
     // sample some random kewywords
     // the second arg specifies how many keywords to sample,
     // which is also a random integer
@@ -184,13 +202,29 @@ async function getRandomSearches(keywords, ntimes) {
 
     // the searchUrlString is in now of the form http://dla_search:5004/search?q=kw1+kw2+...
     // now use the search service to get relevant books and put them into the results array
-    fetch(searchUrlString, { method: "GET" })
+
+    // push the promise returned to an array so that we can await on all of them
+    // later using Promise.all
+    console.log("Sending fetch: ");
+    allFetchPromises.push(fetch(searchUrlString, { method: "GET" })
       .then((res) => res.json())
-      .then((result) => results.push(...result));
+      .then((result) => {
+        console.log("Result received: ");
+        console.log(result);
+        results.push(...result)
+      }));
     // above, the variable result is an array of search results from the search service
   }
 
-  // returns the results, making them unique using the 'isbn13' key
+  console.log("All fetch promises: ");
+  console.log(allFetchPromises);
+  // wait for all the search fetches to complete
+  await Promise.all(allFetchPromises);
+
+  console.log("After awaiting them all, results: ");
+  console.log(results);
+
+  // return the results, making them unique using the 'isbn13' key
   // uniqBy is an util function from lodash
   return uniqBy(results, 'isbn13');
 }
