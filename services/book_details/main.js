@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -22,7 +22,10 @@ if (mongo_uri == undefined || mongo_uri == null) {
   process.exit(-1);
 }
 
-if (process.env.JWT_TOKEN_SECRET == undefined || process.env.JWT_TOKEN_SECRET == null) {
+if (
+  process.env.JWT_TOKEN_SECRET == undefined ||
+  process.env.JWT_TOKEN_SECRET == null
+) {
   console.error("The JWT_TOKEN_SECRET variable needs to be defined!");
   process.exit(-1);
 }
@@ -56,7 +59,7 @@ client.connect((error) => {
  *
  * Where,
  * previous avg_nstars = alpha
- * previous nreviews = n 
+ * previous nreviews = n
  * new avg_nstars = alpha + beta
  */
 
@@ -94,7 +97,10 @@ app.get("/bookdets-reviews", verifyJwt, async (req, res) => {
     .toArray();
 
   var finalDetails = {
-    bookDet: { ...result, nstars: average == null || average.length == 0 ? 0 : average[0].avgStars },
+    bookDet: {
+      ...result,
+      nstars: average == null || average.length == 0 ? 0 : average[0].avgStars,
+    },
     reviews: resRev == null ? [] : resRev,
   };
   res.status(200).send(JSON.stringify(finalDetails));
@@ -107,8 +113,39 @@ app.get("/bookdets-reviews", verifyJwt, async (req, res) => {
 });
 
 // Post book review
-app.post("/createreview", (req, res) => {
+app.post("/createreview", verifyJwt, async (req, res) => {
+  res.header("Content-Type", "application/json");
 
+  if (!req.hasJwt) {
+    // no JWT was sent by the client
+    res
+      .status(403)
+      .json({ message: "A valid JWT is required for this endpoint" });
+    return;
+  }
+  const jwtInfo = req.decodedJwt;
+  let userId = jwtInfo._id;
+  userId = ObjectId(userId);
+
+  const reviewCollection = client.db("delibanne").collection("reviews");
+  const bookCollection = client.db("delibanne").collection("books");
+  const userCollection = client.db("delibanne").collection("users");
+  const review = req.body.review;
+  const nstars = req.body.nstars;
+  const bookIsbn = req.body.isbn13;
+
+  const bookRes = await bookCollection.findOne({ isbn13: bookIsbn });
+  const revAuthor = await userCollection.findOne({ _id: userId });
+
+  // inserting review
+  const reviewDets = await reviewCollection.insertOne({
+    review: review,
+    nstars: nstars,
+    reviewAuthor: revAuthor.username,
+    bookID: bookRes._id,
+  });
+
+  res.status(200).json({ message: "Review inserted: Success" });
 });
 
 function startListening() {

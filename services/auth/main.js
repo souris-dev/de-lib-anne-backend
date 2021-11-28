@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { makeJwt } = require("./utils/jwt_utils");
+const nodemailer = require("nodemailer");
 
 const app = express();
 // "Middleware": Web (request) -> (middleware) -> handler
@@ -13,6 +14,21 @@ app.use(cookieParser());
 
 const dotenv = require("dotenv");
 dotenv.config();
+
+// initializing a transporter object to send emails
+let transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_ID,
+    pass: process.env.GMAIL_PASSWORD,
+  },
+});
+
+function getRandomNumber() {
+  min = 100000;
+  max = 999999;
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
 
 // load the required variables from the .env
 const port = process.env.PORT || 5000;
@@ -24,7 +40,10 @@ if (mongo_uri == undefined || mongo_uri == null) {
   process.exit(-1);
 }
 
-if (process.env.JWT_TOKEN_SECRET == undefined || process.env.JWT_TOKEN_SECRET == null) {
+if (
+  process.env.JWT_TOKEN_SECRET == undefined ||
+  process.env.JWT_TOKEN_SECRET == null
+) {
   console.error("The JWT_TOKEN_SECRET variable needs to be defined!");
   process.exit(-1);
 }
@@ -67,9 +86,18 @@ app.post("/auth", async (req, res) => {
     // right email for the right password
 
     // send a cookie with a jwt that expires in the set time (as specified in the line below)
-    const expiry = { duration: '3h', time: new Date(Date.now() + 3 * 60 * 60 * 1000) }
-    res.cookie('jwt', makeJwt({ _id: result._id, email: userEmail }, expiry.duration), { expires: expiry.time, httpOnly: true })
-    res.status(200).send(JSON.stringify({ message: "Auth OK", username: result.username }));
+    const expiry = {
+      duration: "3h",
+      time: new Date(Date.now() + 3 * 60 * 60 * 1000),
+    };
+    res.cookie(
+      "jwt",
+      makeJwt({ _id: result._id, email: userEmail }, expiry.duration),
+      { expires: expiry.time, httpOnly: true }
+    );
+    res
+      .status(200)
+      .send(JSON.stringify({ message: "Auth OK", username: result.username }));
   } else {
     // wrong password
     res.status(400).send(JSON.stringify({ message: "Wrong password" }));
@@ -105,9 +133,18 @@ app.post("/createuser", async (req, res) => {
     });
 
     // send a cookie with a jwt that expires in the set time (as specified in the line below)
-    const expiry = { duration: '3h', time: new Date(Date.now() + 3 * 60 * 60 * 1000) }
-    res.cookie('jwt', makeJwt({ _id: result._id, email: userEmail }, expiry.duration), { expires: expiry.time, httpOnly: true })
-    res.status(200).send(JSON.stringify({ message: "User created", username: username }));
+    const expiry = {
+      duration: "3h",
+      time: new Date(Date.now() + 3 * 60 * 60 * 1000),
+    };
+    res.cookie(
+      "jwt",
+      makeJwt({ _id: result._id, email: userEmail }, expiry.duration),
+      { expires: expiry.time, httpOnly: true }
+    );
+    res
+      .status(200)
+      .send(JSON.stringify({ message: "User created", username: username }));
   } catch (error) {
     res.status(500).send(JSON.stringify({ message: error.toString() }));
   }
@@ -116,13 +153,26 @@ app.post("/createuser", async (req, res) => {
 // logout endpoint
 app.post("/logout", (req, res) => {
   // to delete a cookie, just set its expiry time to the past
-  res.cookie('jwt', '', { expires: new Date(Date.now() - 10000) });
-  res.header('Content-Type', "application/json");
+  res.cookie("jwt", "", { expires: new Date(Date.now() - 10000) });
+  res.header("Content-Type", "application/json");
   res.status(200).send(JSON.stringify({ message: "Logged out" }));
-})
+});
 
-app.post('/sendotp', (req, res) => {
-  
+app.post("/sendotp", async (req, res) => {
+  const otp = getRandomNumber();
+  var email = req.body.email;
+
+  // send mail with defined transport object
+  let info = await transporter.sendMail({
+    from: process.env.EMAIL_ID,
+    to: email,
+    subject: "DeLibAnne User Verification",
+    html: `Welcome User,<br>Your user verification OTP is <h3><b>${otp}</b></h3>Thank you for registering!`,
+  });
+  res.header("Content-Type", "application/json");
+  res.status(200).json({ message: otp });
+
+  console.log("Message sent: %s", info);
 });
 
 function startListening() {
