@@ -59,8 +59,7 @@ app.get('/search', verifyJwt, async (req, res) => {
           query: query,
           path: {
             wildcard: "*"
-          },
-          fuzzy: {}
+          }
         }
       }
     },
