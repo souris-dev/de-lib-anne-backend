@@ -24,7 +24,9 @@ app.use(cookieParser());
 // initializing a transporter object to send emails
 
 if (process.env.EMAIL_ID == null || process.env.GMAIL_PASSWORD == null) {
-  console.error("Auth service needs the variables EMAIL_ID and GMAIL_PASSWORD to be defined in the environment.");
+  console.error(
+    "Auth service needs the variables EMAIL_ID and GMAIL_PASSWORD to be defined in the environment."
+  );
   process.exit(-1);
 }
 
@@ -140,7 +142,7 @@ app.post("/createuser", async (req, res) => {
   }
 
   try {
-    await userCollection.insertOne({
+    insertedDoc = await userCollection.insertOne({
       username: username,
       email: email,
       password: hashedPass,
@@ -154,7 +156,7 @@ app.post("/createuser", async (req, res) => {
     };
     res.cookie(
       "jwt",
-      makeJwt({ _id: result._id, email: userEmail }, expiry.duration),
+      makeJwt({ _id: insertedDoc.insertedId, email: email }, expiry.duration),
       { expires: expiry.time, httpOnly: true }
     );
     res
