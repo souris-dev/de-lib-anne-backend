@@ -95,7 +95,7 @@ app.put("/addwishitem", verifyJwt, async (req, res) => {
   // $addToSet because if that book already exists, we don't need to add it again
   const updateRes = await wishlistCollection.updateOne(
     {
-      userId: userId,
+      userID: ObjectId(userId),
     },
     {
       $addToSet: { wishlist: resBook._id },
