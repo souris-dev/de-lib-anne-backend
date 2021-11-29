@@ -196,6 +196,7 @@ app.get("/getwishlist", verifyJwt, async (req, res) => {
         $project: {
           _id: 0,
           title: 1,
+          tags: 1,
           author: 1,
           summary: 1,
           nstars: 1,

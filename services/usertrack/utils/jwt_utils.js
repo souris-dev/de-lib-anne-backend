@@ -20,7 +20,7 @@ function verifyJwt(req, res, next) {
   // get the jwt from the cookie
   jwt.verify(req.cookies.jwt, TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      res.status(403).send(JSON.stringify(err));
+      res.status(401).send(JSON.stringify(err));
       return;
     }
 
