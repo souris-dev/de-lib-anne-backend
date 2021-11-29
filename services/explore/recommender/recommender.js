@@ -103,6 +103,7 @@ async function getExploreWithRecommendations(userId) {
       // by a given probability, include the author
       if (Math.random() > authorProb) {
         interestKeywords.push(bookVisit.author);
+        interestTags.push(bookVisit.author);
       }
     })
   }
