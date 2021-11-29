@@ -116,12 +116,9 @@ async function getExploreWithRecommendations(userId) {
     })
   }
 
-  console.log("After processing searches, interestKeywords: ");
-  console.log(interestKeywords);
-
   // get the most frequently visited tags and the recommendations
   const allResults = await Promise.all(
-    [getMostFrequentTags(interestKeywords), getRandomSearches(interestKeywords, niter)]
+    [getMostFrequentTags(interestTags), getRandomSearches(interestKeywords, niter)]
   );
 
   console.log("Most freq tags: ");
