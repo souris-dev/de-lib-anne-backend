@@ -250,7 +250,7 @@ app.delete("/deletewishitem", verifyJwt, async (req, res) => {
 
   const result = await wishlistCollection.updateOne(
     {
-      userId: ObjectId(userId),
+      userID: ObjectId(userId),
     },
     {
       $pull: { wishlist: bookRes._id },
