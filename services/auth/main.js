@@ -23,7 +23,7 @@ app.use(cookieParser());
 
 // initializing a transporter object to send emails
 
-if (process.env.EMAIL_ID == null || process.GMAIL_PASSWORD == null) {
+if (process.env.EMAIL_ID == null || process.env.GMAIL_PASSWORD == null) {
   console.error("Auth service needs the variables EMAIL_ID and GMAIL_PASSWORD to be defined in the environment.");
   process.exit(-1);
 }
