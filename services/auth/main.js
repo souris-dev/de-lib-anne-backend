@@ -142,7 +142,7 @@ app.post("/createuser", async (req, res) => {
   }
 
   try {
-    insertedDoc = await userCollection.insertOne({
+    let insertedDoc = await userCollection.insertOne({
       username: username,
       email: email,
       password: hashedPass,
