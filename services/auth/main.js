@@ -192,6 +192,31 @@ app.post("/sendotp", async (req, res) => {
   console.log("Message sent: %s", info);
 });
 
+app.post("/forgotpassword", async (req, res) => {
+  res.header("Content-Type", "application/json");
+
+  const userCollection = client.db("delibanne").collection("users");
+
+  const reqbody = req.body;
+
+  var email = reqbody.email;
+  var password = reqbody.password;
+  var hashedPass = await bcrypt.hash(password, 10);
+
+  var result = await userCollection.updateOne(
+    { email: email },
+    { $set: { password: hashedPass } }
+  );
+  console.log(
+    `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
+  );
+  if (result.matchedCount == 0) {
+    res.status(400).json({ message: "User with this email does not exist" });
+    return;
+  }
+  res.status(200).json({ message: "Password updated successfully!" });
+});
+
 function startListening() {
   app.listen(port, () => {
     console.log(`auth service listening at http://${hostIp}:${port}`);
