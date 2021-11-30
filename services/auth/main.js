@@ -22,7 +22,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 // initializing a transporter object to send emails
-
 if (process.env.EMAIL_ID == null || process.env.GMAIL_PASSWORD == null) {
   console.error(
     "Auth service needs the variables EMAIL_ID and GMAIL_PASSWORD to be defined in the environment."
@@ -190,6 +189,21 @@ app.post("/sendotp", async (req, res) => {
   res.status(200).json({ message: otp });
 
   console.log("Message sent: %s", info);
+});
+
+app.post("/checkemail", async (req, res) => {
+  res.header("Content-Type", "application/json");
+
+  const userCollection = client.db("delibanne").collection("users");
+
+  var email = req.body.email;
+
+  var result = await userCollection.findOne({ email: email });
+
+  if (result == null) {
+    res.status(400).json({ message: "User with this email does not exist." });
+    return;
+  }
 });
 
 app.post("/forgotpassword", async (req, res) => {
