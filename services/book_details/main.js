@@ -150,7 +150,9 @@ app.post("/createreview", verifyJwt, async (req, res) => {
     bookID: bookRes._id,
   });
 
-  res.status(200).json({ message: "Review inserted: Success" });
+  res
+    .status(200)
+    .json({ message: "Review inserted: Success", _id: reviewDets.insertedId });
 });
 
 // Adding book to the books collection in database
