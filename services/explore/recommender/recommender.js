@@ -125,6 +125,10 @@ async function getExploreWithRecommendations(userId) {
     });
   }
 
+  if (interestKeywords.length < 1) {
+    return getExplore();
+  }
+
   // get the most frequently visited tags and the recommendations
   const allResults = await Promise.all([
     getMostFrequentTags(interestTags),
@@ -200,6 +204,8 @@ async function getRandomSearches(keywords, ntimes) {
 
     // random is lodash's random: returns an int between the range
     // (inclusive of the given bounds)
+    console.log("keywords list: ");
+    console.log(keywords);
     const randKeywords = sampleSize(
       keywords,
       random(MIN_KEYWORDS, MAX_KEYWORDS)
